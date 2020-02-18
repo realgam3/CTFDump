@@ -24,7 +24,7 @@ def download_file(url, file_path):
                 f.write(chunk)
             f.flush()
     except Exception as ex:
-        print ex.message
+        print(ex)
 
 
 def get_nonce(url):
@@ -32,7 +32,7 @@ def get_nonce(url):
         urljoin(url, "/login"),
         params={'next': 'challenges'}
     )
-    return re.search('<input type="hidden" name="nonce" value="(.*?)">', res.content).group(1)
+    return re.search('<input type="hidden" name="nonce" value="(.*?)">', res.text).group(1)
 
 
 def login(url, nonce, username, password):
@@ -105,8 +105,11 @@ def run(url, username, password):
                 download_file(file_name, path.join(challenge_path, fn))
 
             for file_name in challenge['files']:
-                fn = path.basename(file_name)
-                download_file(urljoin(url, "/files/%s" % file_name), path.join(challenge_path, fn))
+                fn = path.basename(urlparse(file_name).path)
+                if not file_name.startswith('/files/'):
+                    file_name = "/files/%s" % file_name
+
+                download_file(urljoin(url, file_name), path.join(challenge_path, fn))
 
     # Logout
     logout(url)
