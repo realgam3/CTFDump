@@ -131,11 +131,18 @@ def main(args=None):
     parser.add_argument("-p", "--password",
                         help="CTF password.",
                         required=True)
+    parser.add_argument("-D", "--debug",
+                        help="Print debug messages",
+                        action="store_true")
 
     sys_args = vars(parser.parse_args(args=args))
 
     # Configure Logger
-    logging.basicConfig(level=logging.INFO,
+    if sys_args.pop("debug"):
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    logging.basicConfig(level=log_level,
                         format='%(asctime)s %(levelname)s %(message)s',
                         datefmt='%d-%m-%y %H:%M:%S')
 
