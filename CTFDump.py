@@ -77,8 +77,17 @@ def iter_challenges(url):
         yield session.get(urljoin(url, "/chals/%d" % challenge['id'])).json()
 
 
-def run(url, username, password):
+def run(url, username, password, cookie):
     hostname = urlparse(url).hostname
+
+    if cookie is not None:
+        for one_cookie in cookie:
+            split_cookie = one_cookie.split("=", 1)
+            if len(split_cookie) != 2:
+                logger.error("Invalid cookie: %r", one_cookie)
+                continue
+            name, value = split_cookie
+            session.cookies.set(name, value)
 
     # Login
     login(url, get_nonce(url), username, password)
@@ -135,6 +144,9 @@ def main(args=None):
     parser.add_argument("-p", "--password",
                         help="CTF password.",
                         required=True)
+    parser.add_argument("-C", "--cookie",
+                        help="Add cookie before trying to access CTFd",
+                        action='append')
     parser.add_argument("-D", "--debug",
                         help="Print debug messages",
                         action="store_true")
