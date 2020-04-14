@@ -15,6 +15,7 @@ session = requests.Session()
 
 
 def download_file(url, file_path):
+    logger.info("Downloading file \"%s\" -> \"%s\"", url, file_path)
     try:
         res = session.get(url, stream=True)
         with open(file_path, 'wb') as f:
@@ -28,6 +29,7 @@ def download_file(url, file_path):
 
 
 def get_nonce(url):
+    logger.debug("Getting nonce")
     res = session.get(
         urljoin(url, "/login"),
         params={'next': 'challenges'}
@@ -36,6 +38,7 @@ def get_nonce(url):
 
 
 def login(url, nonce, username, password):
+    logger.info("Logging in as \"%s\"", username)
     session.post(
         urljoin(url, "/login"),
         params={'next': 'challenges'},
@@ -48,12 +51,13 @@ def login(url, nonce, username, password):
 
 
 def logout(url):
-    # Get Challenges
+    logger.info("Logging out",)
     session.get(urljoin(url, "/logout"))
 
 
 def iter_challenges(url):
     # CTFD 2.0
+    logger.info("Getting challenges")
     res = session.get(urljoin(url, "/api/v1/challenges"))
     if res.ok:
         res_json = res.json()
@@ -73,8 +77,17 @@ def iter_challenges(url):
         yield session.get(urljoin(url, "/chals/%d" % challenge['id'])).json()
 
 
-def run(url, username, password):
+def run(url, username, password, cookie):
     hostname = urlparse(url).hostname
+
+    if cookie is not None:
+        for one_cookie in cookie:
+            split_cookie = one_cookie.split("=", 1)
+            if len(split_cookie) != 2:
+                logger.error("Invalid cookie: %r", one_cookie)
+                continue
+            name, value = split_cookie
+            session.cookies.set(name, value)
 
     # Login
     login(url, get_nonce(url), username, password)
@@ -131,11 +144,21 @@ def main(args=None):
     parser.add_argument("-p", "--password",
                         help="CTF password.",
                         required=True)
+    parser.add_argument("-C", "--cookie",
+                        help="Add cookie before trying to access CTFd",
+                        action='append')
+    parser.add_argument("-D", "--debug",
+                        help="Print debug messages",
+                        action="store_true")
 
     sys_args = vars(parser.parse_args(args=args))
 
     # Configure Logger
-    logging.basicConfig(level=logging.INFO,
+    if sys_args.pop("debug"):
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    logging.basicConfig(level=log_level,
                         format='%(asctime)s %(levelname)s %(message)s',
                         datefmt='%d-%m-%y %H:%M:%S')
 
