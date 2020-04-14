@@ -199,7 +199,6 @@ def main(args=None):
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-v", "--version", action="version", version="%(prog)s {ver}".format(ver=__version__))
 
-    # Proxy Configuration
     parser.add_argument("url",
                         help="ctf url (for example: https://demo.ctfd.io/)")
     parser.add_argument("-c", "--ctf-platform",
