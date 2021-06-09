@@ -5,11 +5,12 @@ import codecs
 import logging
 from os import path
 from getpass import getpass
+from bs4 import BeautifulSoup
 from requests.utils import CaseInsensitiveDict
 from requests.sessions import urljoin, urlparse, Session
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 class BadUserNameOrPasswordException(Exception):
@@ -122,7 +123,8 @@ class CTFd(CTF):
 
     def __get_nonce(self):
         res = self.session.get(urljoin(self.url, "/login"))
-        return re.search('<input type="hidden" name="nonce" value="(.*?)">', res.text).group(1)
+        html = BeautifulSoup(res.text, 'html.parser')
+        return html.find("input", {'type': 'hidden', 'name': 'nonce'}).get("value")
 
     def login(self, username, password):
         next_url = '/challenges'
@@ -181,7 +183,7 @@ class CTFd(CTF):
 
 
 def get_credentials(username=None, password=None):
-    username = username or os.environ.get('CTF_USERNAME', input('User: '))
+    username = username or os.environ.get('CTF_USERNAME', input('User/Email: '))
     password = password or os.environ.get('CTF_PASSWORD', getpass('Password: ', stream=False))
 
     return username, password
@@ -222,7 +224,6 @@ def main(args=None):
 
     ctf = CTFs.get(sys_args['ctf_platform'])(sys_args['url'])
     if not sys_args['no_login'] or not os.environ.get('CTF_NO_LOGIN'):
-        print(get_credentials(sys_args['username'], sys_args['password']))
         if not ctf.login(*get_credentials(sys_args['username'], sys_args['password'])):
             raise BadUserNameOrPasswordException()
 
