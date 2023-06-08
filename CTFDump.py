@@ -199,7 +199,6 @@ class rCTF(CTF):
         return file_info['url']
 
     def login(self, team_token):
-        next_url = '/api/v1/challs'
         headers = {
             'Content-type': 'application/json',
             'Accept': 'application/json'
@@ -211,7 +210,7 @@ class rCTF(CTF):
                 'teamToken': team_token
             })
         )
-        # if res.ok: and urlparse(res.url).path == next_url:
+
         if res.ok:
             self.BarerToken = json.loads(res.content)['data']['authToken']
             return True
