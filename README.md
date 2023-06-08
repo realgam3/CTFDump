@@ -27,5 +27,5 @@ optional arguments:
   -c {CTFd}, --ctf-platform {CTFd}  ctf platform (default: CTFd)
   -u USERNAME, --username USERNAME  username (default: None)
   -p PASSWORD, --password PASSWORD  password (default: None)
-   -t TOKEN, --token TOKEN  team token for rCTF (default: None)
+  -t TOKEN, --token TOKEN  team token for rCTF (default: None)
 ```
