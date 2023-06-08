@@ -7,12 +7,16 @@ CTFd Dump Tool - When you want to have an offline copy of a CTF.
 
 `python CTFDump.py -u username -p password https://demo.ctfd.io/`
 
+> or for rCFT platform
+
+`python CTFDump.py -c rCTF -t [token-team] https://demo.ctfd.io/`
+
 ### Command Line Flags
 
 See `--help` for the complete list, but in short:
 
 ```sh
-usage: CTFDump.py [-h] [-v] [-c {CTFd}] [-n] [-u USERNAME] [-p PASSWORD] url  
+usage: CTFDump.py [-h] [-v] [-c {CTFd,rCTF}] [-n] [-u USERNAME] [-p PASSWORD] [-t TOKEN] url
 
 positional arguments:
   url                   ctf url (for example: https://demo.ctfd.io/)
@@ -22,5 +26,6 @@ optional arguments:
   -v, --version         show program's version number and exit  
   -c {CTFd}, --ctf-platform {CTFd}  ctf platform (default: CTFd)
   -u USERNAME, --username USERNAME  username (default: None)
-  -p PASSWORD, --password PASSWORD  password (default: None)  
+  -p PASSWORD, --password PASSWORD  password (default: None)
+   -t TOKEN, --token TOKEN  team token for rCTF (default: None)
 ```
