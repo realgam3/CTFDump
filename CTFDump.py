@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from requests.utils import CaseInsensitiveDict
 from requests.sessions import urljoin, urlparse, Session
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from urllib.parse import unquote
 
 __version__ = "0.2.1"
 
@@ -199,6 +200,7 @@ class rCTF(CTF):
         return file_info['url']
 
     def login(self, team_token):
+        team_token = unquote(team_token)
         headers = {
             'Content-type': 'application/json',
             'Accept': 'application/json'
