@@ -6,13 +6,14 @@ import codecs
 import logging
 from os import path
 from getpass import getpass
+from requests import Session
 from bs4 import BeautifulSoup
 from requests.utils import CaseInsensitiveDict
-from requests.sessions import urljoin, urlparse, Session
+from urllib.parse import urlparse, urljoin
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from urllib.parse import unquote
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 
 class BadUserNameOrPasswordException(Exception):
@@ -97,7 +98,7 @@ class CTF(object):
         raise NotImplementedError()
 
     def logout(self):
-        raise NotImplementedError()
+        self.session.get(urljoin(self.url, "/logout"))
 
 
 class CTFd(CTF):
@@ -147,9 +148,6 @@ class CTFd(CTF):
             return True
         return False
 
-    def logout(self):
-        self.session.get(urljoin(self.url, "/logout"))
-
     def __get_file_url(self, file_name):
         if not file_name.startswith('/files/'):
             file_name = f"/files/{file_name}"
@@ -190,16 +188,14 @@ class CTFd(CTF):
 
 class rCTF(CTF):
     def __init__(self, url):
-        self.url = url
-        self.session = Session()
-        self.logger = logging.getLogger(__name__)
+        super().__init__(url)
         self.BarerToken = ''
 
     @staticmethod
     def __get_file_url(file_info):
         return file_info['url']
 
-    def login(self, team_token):
+    def login(self, team_token, **kwargs):
         team_token = unquote(team_token)
         headers = {
             'Content-type': 'application/json',
@@ -219,7 +215,6 @@ class rCTF(CTF):
         return False
 
     def __iter_challenges(self):
-
         headers = {
             'Content-type': 'application/json',
             'Accept': 'application/json',
@@ -238,9 +233,6 @@ class rCTF(CTF):
                 description=challenge['description'], value=challenge['points'],
                 files=list(map(self.__get_file_url, challenge.get('files', [])))
             )
-
-    def logout(self):
-        self.session.get(urljoin(self.url, "/logout"))
 
 
 def get_credentials(username=None, password=None):
