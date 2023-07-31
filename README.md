@@ -9,7 +9,7 @@ CTFd Dump Tool - When you want to have an offline copy of a CTF.
 
 > or for rCTF platform
 
-`python CTFDump.py -c rCTF -t [token-team] https://demo.ctfd.io/`
+`python CTFDump.py -c rCTF -t team-token https://demo.ctfd.io/`
 
 ### Command Line Flags
 
@@ -31,3 +31,7 @@ options:
   -p PASSWORD, --password PASSWORD password (default: None)
   -t TOKEN, --token TOKEN team token for rCTF (default: None)
 ```
+
+### Kudos
+* [mosheDO](https://github.com/mosheDO) - For The rCTF Support
+* [hendrykeren](https://github.com/hendrykeren) - For The Awesome Logo
