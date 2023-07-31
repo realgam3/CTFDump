@@ -1,3 +1,4 @@
+import json
 import re
 import os
 import sys
@@ -9,11 +10,16 @@ from bs4 import BeautifulSoup
 from requests.utils import CaseInsensitiveDict
 from requests.sessions import urljoin, urlparse, Session
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from urllib.parse import unquote
 
 __version__ = "0.2.1"
 
 
 class BadUserNameOrPasswordException(Exception):
+    pass
+
+
+class BadTokenException(Exception):
     pass
 
 
@@ -182,6 +188,61 @@ class CTFd(CTF):
             )
 
 
+class rCTF(CTF):
+    def __init__(self, url):
+        self.url = url
+        self.session = Session()
+        self.logger = logging.getLogger(__name__)
+        self.BarerToken = ''
+
+    @staticmethod
+    def __get_file_url(file_info):
+        return file_info['url']
+
+    def login(self, team_token):
+        team_token = unquote(team_token)
+        headers = {
+            'Content-type': 'application/json',
+            'Accept': 'application/json'
+        }
+        res = self.session.post(
+            url=urljoin(self.url, "/api/v1/auth/login"),
+            headers=headers,
+            data=json.dumps({
+                'teamToken': team_token
+            })
+        )
+
+        if res.ok:
+            self.BarerToken = json.loads(res.content)['data']['authToken']
+            return True
+        return False
+
+    def __iter_challenges(self):
+
+        headers = {
+            'Content-type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer {}'.format(self.BarerToken)
+        }
+        res_json = self.session.get(urljoin(self.url, "/api/v1/challs"), headers=headers).json()
+        challenges = res_json['data']
+        for challenge in challenges:
+            yield challenge
+
+    def iter_challenges(self):
+        for challenge in self.__iter_challenges():
+            yield Challenge(
+                session=self.session, url=self.url,
+                name=challenge['name'], category=challenge['category'],
+                description=challenge['description'], value=challenge['points'],
+                files=list(map(self.__get_file_url, challenge.get('files', [])))
+            )
+
+    def logout(self):
+        self.session.get(urljoin(self.url, "/logout"))
+
+
 def get_credentials(username=None, password=None):
     username = username or os.environ.get('CTF_USERNAME', input('User/Email: '))
     password = password or os.environ.get('CTF_PASSWORD', getpass('Password: ', stream=False))
@@ -190,7 +251,8 @@ def get_credentials(username=None, password=None):
 
 
 CTFs = CaseInsensitiveDict(data={
-    "CTFd": CTFd
+    "CTFd": CTFd,
+    "rCTF": rCTF
 })
 
 
@@ -214,7 +276,8 @@ def main(args=None):
                         help="username")
     parser.add_argument("-p", "--password",
                         help="password")
-
+    parser.add_argument("-t", "--token",
+                        help="team token for rCTF")
     sys_args = vars(parser.parse_args(args=args))
 
     # Configure Logger
@@ -223,7 +286,10 @@ def main(args=None):
                         datefmt='%d-%m-%y %H:%M:%S')
 
     ctf = CTFs.get(sys_args['ctf_platform'])(sys_args['url'])
-    if not sys_args['no_login'] or not os.environ.get('CTF_NO_LOGIN'):
+    if sys_args['ctf_platform'] == 'rCTF':
+        if not ctf.login(sys_args['token']):
+            raise BadTokenException()
+    elif not sys_args['no_login'] or not os.environ.get('CTF_NO_LOGIN'):
         if not ctf.login(*get_credentials(sys_args['username'], sys_args['password'])):
             raise BadUserNameOrPasswordException()
 
