@@ -35,7 +35,7 @@ setup(
     install_requires=install_requires,
     license="GPLv3",
     platforms="any",
-    url="https://github.com/mosheDO/CTFDump",
+    url="https://github.com/realgam3/CTFDump",
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Development Status :: 5 - Production/Stable",
