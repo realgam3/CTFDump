@@ -9,7 +9,7 @@ from getpass import getpass
 from requests import Session
 from bs4 import BeautifulSoup
 from requests.utils import CaseInsensitiveDict
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, parse_qsl
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from urllib.parse import unquote
 
@@ -81,7 +81,16 @@ class Challenge(object):
             self.logger.info(f"Creating Challenge [{self.category or 'No Category'}] {self.name}")
 
         for file_url in self.files:
+            url_parsed = urlparse(file_url)
+            if not url_parsed.scheme:
+                file_url = urljoin(self.url, file_url)
+
+            url_parsed = urlparse(file_url)
             file_path = path.join(challenge_path, self.escape_filename(path.basename(urlparse(file_url).path)))
+            query = dict(parse_qsl(url_parsed.query))
+            if query:
+                bn = path.basename(query["key"])
+                file_path = path.join(challenge_path, self.escape_filename(bn))
             self.download_file(file_url, file_path)
 
 
